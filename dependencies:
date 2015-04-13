@@ -1,0 +1,5 @@
+dependencies:
+pymongo
+graphlab
+flask
+d3

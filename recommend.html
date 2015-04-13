@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style>
+.node {
+	stroke: #fff;
+	stroke-width: 2px;
+	
+}
+
+.link {
+	stroke: #999;
+	stroke-opacity: .6;
+}
+
+
+.d3-tip {
+	line-height: 1;
+	font-weight: bold;
+	padding: 10px;
+	background: rgba(77, 11, 140, 0.7);
+	color: white;
+	border-radius: 1.5px;
+	font-family:Times New Roman;
+	font-size: 15px;
+}
+/*
+.d3-tip:after {
+	box-sizing: border-box;
+	display: inline;
+	font-size: 10px;
+	width: 100%;
+	line-height: 1;
+	color: #a6bddb;
+	content: "\25BC";
+	position: absolute;
+	text-align: center;
+}
+
+.d3-tip.n:after {
+	margin: -2px 0 0 0;
+	top: 100%;
+	left: 0;
+}
+*/
+</style>
+
+<head>
+<title>Victor Hugo Had No Internet</title>
+</head>
+
+<body>
+
+<script src="d3/d3.min.js"></script>
+<script src="d3/d3-tip.js"></script>
+<script>
+
+//size of region to render on
+var width = 960,
+	height = 800;
+
+//color scheme
+var color = d3.scale.category20();
+	
+//D3 force directed layout
+//Try playing with the charge and link distance
+var force = d3.layout.force()
+    .charge(-250)
+    .linkDistance(100)
+    .size([width, height]);
+    
+//tooltips
+var tip = d3.tip()
+	.attr('class', 'd3-tip')
+	.offset([-10, 0])
+	.html(function(d) {
+		return "name: "+d.name + ", group: " +d.group + ", coolness: "+d.coolness;
+	});
+	
+//Add our canvas
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+svg.call(tip);
+	
+//Select the miserables data ;)
+d3.json("miserables.json", function(error, graph) {
+	force
+		.nodes(graph.nodes)
+		.links(graph.links)
+		.start();
+//linear scale for coolness
+/*	
+	var rScale = d3.scale.linear()
+		.domain([0, d3.max(graph.nodes, function(d) { return d.coolness; })])
+		.range([5, 15]);
+*/
+//square root for coolness	
+	var rScale = d3.scale.sqrt()
+		.domain([0, d3.max(graph.nodes, function(d) { return d.coolness; })])
+		.range([5, 15]);
+
+	
+
+//add the links
+	var link = svg.selectAll(".link")
+		.data(graph.links)
+		.enter().append("line")
+		.attr("class", "link")
+		.style("stroke-width", function(d) { return Math.sqrt(d.value); });
+  
+	var gnodes = svg.selectAll('g.gnode')
+		.data(graph.nodes)
+		.enter()
+		.append('g')
+		.classed('gnode', true);
+		
+// color scheme chose d3.scale.category20() but exclude #d62728 to cope with people who is red-green blindness
+	var node = gnodes.append("circle")
+		.attr("class", "node")
+		.attr("r", function(d) {
+			return rScale(d.coolness);
+		})
+		.style("fill", function(d) {
+			if(color(d .group) ==  "#d62728"){
+				 return "#CF7223"
+			}
+			else {
+				 return color(d .group)
+			} 
+		})
+		.on("dblclick", dblclick)
+		.call(force.drag)
+		.on("mouseover", tip.show)
+		.on("mouseout", tip.hide);
+
+//add label to node and set filtering strategy
+//set stroke to make labels easy to read when overlap with similar color	
+	var labels = gnodes.append("text")
+		.filter(function(d) {
+			return d.coolness > 25;
+		})
+		.text(function(d) { return d.name; })
+		.attr("font-family", "Times New Roman")
+		.attr("font-size", "15px")
+		.attr("fill", "#4D6F8C")
+		.attr("stroke", "white")
+		.attr("stroke-width", .1);
+					
+
+//Update stuff for animation:
+//   This takes the physics simulation for the force directed graph and
+//   sets the location of the nodes and edges to the new positions
+	force.on("tick", function() {
+		link.attr("x1", function(d) { return d.source.x; })
+			.attr("y1", function(d) { return d.source.y; })
+			.attr("x2", function(d) { return d.target.x; })
+			.attr("y2", function(d) { return d.target.y; });
+
+		gnodes.attr("transform", function(d) {
+		return 'translate(' + [d.x, d.y] + ')';
+		});
+	});
+	
+// Pining the nodes function	
+	var countClick=0;
+	function dblclick(d) {
+		countClick += 1;
+		if (countClick % 2 == 1) {
+			d3.select(this)
+				.classed("fixed", d.fixed = true)
+				.attr("r", 25)
+				.style("fill", color(17))
+				.style("stroke", "black")
+				.style("stroke-width", 2);
+		}
+		else {
+			d3.select(this)
+				.classed("fixed", d.fixed = false)
+				.attr("r", function(d) {
+					return rScale(d.coolness)
+				})
+				.style("fill", function(d) {
+					if(color(d .group) == "#d62728"){
+				 		return "#CF7223"
+					}
+					else {
+				 		return color(d.group)
+					} 
+				})
+				.style("stroke", "grey")
+				.style("stroke-width", 1);// this indicates the nodes has been clicked
+		}
+		
+	}
+	
+});
+
+</script>
