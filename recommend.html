@@ -27,7 +27,7 @@
         
        	 //Width and height
 			var w = 1500;
-			var h = 400;
+			var h = 300;
 			
 		
 		
@@ -67,7 +67,7 @@
             	var force = d3.layout.force()
 								 .nodes(dataset)
 								 .size([w, h])
-								 .charge([-1000])
+								 .charge([-400])
 								 .start();
            				           	
             	var gnodes = svg.selectAll('g.gnode')
@@ -88,8 +88,8 @@
 		    	.classed("thumbnails",true)
 		    	.attr("x", -30)
 		    	.attr("y", -30)
-		    	.attr("width", 100)
-		    	.attr("height",100)
+		    	.attr("width", 60)
+		    	.attr("height",60)
 		    	.on("mouseover", function(d) {
 		    				var h1 = d3.select('h1');
 		    				     h1.text("Look what we found similar to item "+d.ItemID);
@@ -102,7 +102,7 @@
 		    							.append("div");
 		    									    									    					
 		    				var recommend = div
-		    						 .style({"position": "relative", "top": "400", "left": function (d) {return ((Math.log(d.ItemID)+Math.random()*1000).toString()+"px")}, "width": function (d) {return ((Math.log(d.ItemID)+Math.random()*10000).toString()+"px")}," height": function (d) {return ((Math.log(d.ItemID)+Math.random()).toString()+"px")}});
+		    						 .style({"position": "relative", "top": "400", "left": function (d) {return ((Math.log(d.ItemID)+Math.random()*1000).toString()+"px")}, "width": "40px"," height": "40px"});
 		    						 //.attr("onclick","window.location= function(d){return (d.Url)	};")	 fix this later.
 		    							    						 		 
 		    				var img_similar = recommend.append("img")
